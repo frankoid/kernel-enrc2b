@@ -32,6 +32,10 @@
 #include <asm/gpio.h>
 #include <linux/cm3629.h>
 
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
+#include <linux/synaptics_i2c_rmi.h>
+#endif
+
 struct gpio_button_data {
 	struct gpio_keys_button *button;
 	struct input_dev *input;
@@ -624,6 +628,12 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&delay_work, Mistouch_powerkey_func);
 	wake_lock_init(&key_reset_clr_wake_lock, WAKE_LOCK_SUSPEND, "gpio_input_pwr_clear");
 
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
+	if (!strcmp(input->name, "gpio-keys")) {
+		sweep2wake_setdev(input);
+		printk(KERN_INFO "[sweep2wake]: set device %s\n", input->name);
+	}
+#endif
 	/* Enable auto repeat feature of Linux input subsystem */
 	if (pdata->rep)
 		__set_bit(EV_REP, input->evbit);
